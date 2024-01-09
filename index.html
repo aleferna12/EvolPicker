@@ -3,11 +3,44 @@
 <html lang="en">
 <head><meta http-equiv="Content-Type" content="text/html;
 charset=UTF-8">
-<title>PageTitle</title>
+<title>EvolPicker</title>
 <style type="text/css"> 
-body{
+body {
     font-family: "HelveticaNeue-Light", sans-serif; padding : 15px;
 }
+table {
+    border-collapse: collapse;
+    color: #333;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    text-align: left;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+table th {
+  background-color: #ff9800;
+  color: #fff;
+  font-weight: bold;
+  padding: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-top: 1px solid #fff;
+  border-bottom: 1px solid #ccc;
+}
+table tr:nth-child(even) td {
+  background-color: #f2f2f2;
+}
+table tr:hover td {
+  background-color: #ffedcc;
+}
+table td {
+  background-color: #fff;
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+  font-weight: bold;
+}
+
 </style>
 
 <!-- Sourcing the cpm build -->
@@ -19,9 +52,10 @@ let PARALLELSIMS = 2
 let FIELDSIZE = 150
 let SNRCELLS = 1
 let MNRCELLS = 4
-let MAXPOP = 200
+let MAXPOP = 250
 let STARTCELLPERTYPE = 100
 let CHANCESPECIATION = 0.002
+let EVOLVABILITY = 1.5
 
 function copyspecies(sim, i) {
     let cellTypeN = sim.conf["NRCELLS"].length
@@ -49,7 +83,7 @@ function speciation(sim) {
             continue
         }
         for (let j = 0; j < ncells; j++) {
-            if (Math.random() < CHANCESPECIATION) {
+            if (Math.random() < CHANCESPECIATION * EVOLVABILITY) {
                 copyspecies(sim, i)
             } 
         }
@@ -59,7 +93,7 @@ function speciation(sim) {
 function evolveColor(color) {
     let rgb = hexToRgb(color)
     for (let i = 0; i < 3; i++) {
-        rgb[i] = Math.min(255, Math.max(0,gaussianRandom(rgb[i], 20)))
+        rgb[i] = Math.min(255, Math.max(0,gaussianRandom(rgb[i], 20 * EVOLVABILITY)))
     }
     return rgbToHex(rgb)
 }
@@ -67,7 +101,7 @@ function evolveColor(color) {
 function evolveAdh(Js) {
     for (let i = 1; i < Js.length; i++) {
         for (let j = 1; j <= i; j++) {
-            let newval = Math.min(200, Math.max(10, gaussianRandom(Js[i][j], 5)))
+            let newval = Math.min(200, Math.max(10, gaussianRandom(Js[i][j], 5 * EVOLVABILITY)))
             Js[i][j] = newval
             Js[j][i] = newval
         }
@@ -88,8 +122,8 @@ function evolveSim(sim) {
         let mincellpop = totcellpop == cellpop ? 1 : 0
         sim.conf["NRCELLS"][i] = Math.max(mincellpop, Math.min(maxcellpop, Math.round(gaussianRandom(cellpop, 2))))
         sim.conf["CELLCOLOR"][i] = evolveColor(sim.conf["CELLCOLOR"][i])
-        sim.C.conf["V"][i + 1] = Math.min(100, Math.max(12, gaussianRandom(sim.C.conf["V"][i + 1], 10)))
-        sim.C.conf["LAMBDA_DIR"][i + 1] = Math.min(550, Math.max(0, gaussianRandom(sim.C.conf["LAMBDA_DIR"][i + 1], 20)))
+        sim.C.conf["V"][i + 1] = Math.min(100, Math.max(12, gaussianRandom(sim.C.conf["V"][i + 1], 10 * EVOLVABILITY)))
+        sim.C.conf["LAMBDA_DIR"][i + 1] = Math.min(550, Math.max(0, gaussianRandom(sim.C.conf["LAMBDA_DIR"][i + 1], 20 * EVOLVABILITY)))
     }
 }
 
@@ -206,7 +240,7 @@ function initCanvasTable() {
     for (let i = 0; i < PARALLELSIMS; i++) {
         let div = document.createElement("div")
         div.id = "canvas-" + String(i)
-        div.style = "margin-right: 10px"
+        div.style = "margin-right: 30px"
         let canvas = document.createElement("canvas")
         canvas.width = "0"
         canvas.height = "0"
@@ -274,18 +308,50 @@ function randomizeSims() {
 </script>
 </head>
 <body onload="initialize()">
-<h1>Your Page Title</h1>
+<h1>Real Time Evolution</h1>
 <p>
-Description of your page.
+Bellow you can see two simulations of bacterial cells living in a petri dish. When you click on top of one of the simulations, we take some of the cells in that simulation and use them to inoculate two new petri dishes. Occasionally, mutations will change how the cells behave in the simulations. By clicking on a simulation in which an interesting mutation occured, we are artificially selecting which bacteria gets to live and spread their genes.
 </p>
+<h2>Click on one of simulations bellow to see evolution happening in real time!</h2>
+<p>You can also use the "reset" button to reset the simulations to their original state and the "randomize" button to evolve the simulations independently 1000 times.</p>
 <div style="display: flex">
     <button type="button" onclick="resetSims()" style="margin-right: 10px;">Reset</button>
     <button type="button" onclick="randomizeSims()">Randomize</button>
 </div>
 <div id="canvas-table" style="display: flex"></div>
-<br>
-
-<table border="1" style="float: left; margin-right:20px">
+<h2>Challenges</h2>
+<p>Try to complete the challenges bellow by selecting cells from the right simulations. You can hover the mouse on top of the name of each challenge to see what needs to be done to complete it. The statistics table on the right might be useful as well.</p>
+<table style="float: left; margin-right:20px">
+    <tr>
+        <th>Challenge</th>
+        <th>Completed</th>
+    </tr>
+    <tr title="Have 4 different species in a single simulation at the same time">
+        <td>Teeming with life</td>
+        <td style="text-align: center"><input type="checkbox"></td>
+    </tr>
+    <tr title="Have 150 cells in a single simulation">
+        <td>It's crowded here!</td>
+        <td style="text-align: center"><input type="checkbox"></td>
+    </tr>
+        <tr title="Evolve a cell species that moves very fast">
+            <td>Tiny race cars</td>
+            <td style="text-align: center"><input type="checkbox"></td>
+        </tr>
+        <tr title="Evolve a cell species that is small and doesn't move">
+            <td>Dormant spores</td>
+            <td style="text-align: center"><input type="checkbox"></td>
+        </tr>
+        <tr title="Have a very large and a very small species coexisting in the same simulation">
+            <td>Giant and dwarf</td>
+            <td style="text-align: center"><input type="checkbox"></td>
+        </tr>
+        <tr title="Evolve a simulation with only unicellular organisms of at least three different species">
+            <td>Microbial world</td>
+            <td style="text-align: center"><input type="checkbox"></td>
+        </tr>
+</table>
+<table>
     <tr>
     <th>Stat</th>
     <th>Sim 1</th>
@@ -318,36 +384,6 @@ Description of your page.
     <td></td>
     <td></td>
     </tr>
-</table>
-<table border="1">
-    <tr>
-        <th>Challenge</th>
-        <th>Completed</th>
-    </tr>
-    <tr>
-        <td title="Have 4 different species in a single simulation at the same time">Teeming with life</td>
-        <td style="text-align: center"><input type="checkbox"></td>
-    </tr>
-    <tr>
-        <td title="Have 150 cells in a single simulation">It's crowded here!</td>
-        <td style="text-align: center"><input type="checkbox"></td>
-    </tr>
-        <tr>
-            <td title="Evolve a cell species that moves very fast">Tiny race cars</td>
-            <td style="text-align: center"><input type="checkbox"></td>
-        </tr>
-        <tr>
-            <td title="Evolve a cell species that is small and doesn't move">Dormant spores</td>
-            <td style="text-align: center"><input type="checkbox"></td>
-        </tr>
-        <tr>
-            <td title="Have a very large and a very small species coexisting in the same simulation">Giant and dwarf</td>
-            <td style="text-align: center"><input type="checkbox"></td>
-        </tr>
-        <tr>
-            <td title="Evolve a simulation with only unicellular organisms of at least three different species">Microbial world</td>
-            <td style="text-align: center"><input type="checkbox"></td>
-        </tr>
 </table>
 <br>
 </body>
